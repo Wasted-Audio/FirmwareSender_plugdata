@@ -26,13 +26,12 @@ jobs:
       - name: Zip
         run: cd Builds/MacOSX/build/Release && zip FirmwareSender-osx.zip FirmwareSender
       - uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
         with:
-          name: ${{ github.sha }}
-          tag_name: ${{ github.ref }}
-          target_commitish: ${{ github.sha }}
+          name: ${{ github.ref_name }}
+          tag_name: ${{ github.ref_name }}
           files: Builds/MacOSX/build/Release/FirmwareSender-osx.zip
-          draft: true
-          prerelease: true
+
 
   build-ubuntu:
     name: Build for Ubuntu
@@ -52,13 +51,12 @@ jobs:
       - name: Zip
         run: cd Builds/LinuxMakefile/build && zip FirmwareSender-ubuntu.zip FirmwareSender
       - uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
         with:
-          name: ${{ github.sha }}
-          tag_name: ${{ github.ref }}
-          target_commitish: ${{ github.sha }}
+          name: ${{ github.ref_name }}
+          tag_name: ${{ github.ref_name }}
           files: Builds/LinuxMakefile/build/FirmwareSender-ubuntu.zip
-          draft: true
-          prerelease: true
+
 
   build-windows:
     name: Build for Windows
@@ -78,10 +76,8 @@ jobs:
       - name: Zip
         run: cd Builds/VisualStudio2022/x64/release/ConsoleApp && Compress-Archive FirmwareSender.exe FirmwareSender-windows.zip
       - uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
         with:
-          name: ${{ github.sha }}
-          tag_name: ${{ github.ref }}
-          target_commitish: ${{ github.sha }}
+          name: ${{ github.ref_name }}
+          tag_name: ${{ github.ref_name }}
           files: Builds/VisualStudio2022/x64/release/ConsoleApp/FirmwareSender-windows.zip
-          draft: true
-          prerelease: true
