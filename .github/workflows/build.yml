@@ -6,19 +6,18 @@ concurrency:
   group: build-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
-env:
-  JUCE_VERSION: "7.0.8"
-
 jobs:
   build-osx:
     name: Build for OSX
     runs-on: macos-13
     steps:
       - uses: actions/checkout@v4
-      - name: Download JUCE
-        run: curl -L https://github.com/juce-framework/JUCE/releases/download/${{ env.JUCE_VERSION }}/juce-${{ env.JUCE_VERSION }}-osx.zip -o juce-${{ env.JUCE_VERSION }}-osx.zip
-      - name: Extract JUCE
-        run: unzip -q juce-${{ env.JUCE_VERSION }}-osx.zip
+        with:
+          submodules: recursive
+      - name: Build Projucer
+        run: cd JUCE/extras/Projucer/Builds/MacOSX && xcodebuild -configuration Release
+      - name: Move Projucer
+        run: mv JUCE/extras/Projucer/Builds/MacOSX/build/Projucer ./JUCE/Projucer
       - name: Generate Builds (resave)
         run: ./JUCE/Projucer.app/Contents/MacOS/Projucer --resave FirmwareSender.jucer
       - name: Build
@@ -40,14 +39,16 @@ jobs:
       - name: Install dependencies
         run: sudo apt update && sudo apt-get install -y libasound2-dev libjack-jackd2-dev libcurl4-openssl-dev
       - uses: actions/checkout@v4
-      - name: Download JUCE
-        run: curl -L https://github.com/juce-framework/JUCE/releases/download/${{ env.JUCE_VERSION }}/juce-${{ env.JUCE_VERSION }}-linux.zip -o juce-${{ env.JUCE_VERSION }}-linux.zip
-      - name: Extract JUCE
-        run: unzip -q juce-${{ env.JUCE_VERSION }}-linux.zip
+        with:
+          submodules: recursive
+      - name: Build Projucer
+        run: cd JUCE/extras/Projucer/Builds/LinuxMakefile && make -j
+      - name: Move Projucer
+        run: mv JUCE/extras/Projucer/Builds/LinuxMakefile/build/Projucer ./JUCE/Projucer
       - name: Generate Builds (resave)
         run: ./JUCE/Projucer --resave FirmwareSender.jucer
       - name: Build
-        run: cd Builds/LinuxMakefile && make
+        run: cd Builds/LinuxMakefile && make -j
       - name: Zip
         run: cd Builds/LinuxMakefile/build && zip FirmwareSender-ubuntu.zip FirmwareSender
       - uses: softprops/action-gh-release@v2
@@ -63,14 +64,16 @@ jobs:
     runs-on: windows-2022
     steps:
       - uses: actions/checkout@v4
-      - name: Download JUCE
-        run: curl -L https://github.com/juce-framework/JUCE/releases/download/${{ env.JUCE_VERSION }}/juce-${{ env.JUCE_VERSION }}-windows.zip -o juce-${{ env.JUCE_VERSION }}-windows.zip
-      - name: Extract JUCE
-        run: unzip -q juce-${{ env.JUCE_VERSION }}-windows.zip
-      - name: Generate Builds (resave)
-        run: JUCE/Projucer.exe --resave FirmwareSender.jucer
+        with:
+          submodules: recursive
       - name: Add msbuild to PATH
         uses: microsoft/setup-msbuild@v1.1
+      - name: Build Projucer
+        run: cd JUCE/extras/Projucer/Builds/VisualStudio2022 && msbuild Projucer_App.vcxproj /p:configuration=release /p:platform=x64
+      - name: Move Projucer
+        run: mv JUCE/extras/Projucer/Builds/VisualStudio2022/build/Projucer.exe ./JUCE/Projucer.exe
+      - name: Generate Builds (resave)
+        run: JUCE/Projucer.exe --resave FirmwareSender.jucer
       - name: Build
         run: cd Builds/VisualStudio2022 && msbuild FirmwareSender_ConsoleApp.vcxproj /p:configuration=release /p:platform=x64
       - name: Zip
